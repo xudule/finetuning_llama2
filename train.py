@@ -25,7 +25,7 @@ print("="*20, inference(input, model, tokenizer), "="*20)
 
 model_dir = "test_trainer"
 training_args = TrainingArguments(output_dir=model_dir,
-                                  num_train_epochs=1,
+                                  num_train_epochs=100,
                                   evaluation_strategy="epoch")
 
 peft_config = LoraConfig(

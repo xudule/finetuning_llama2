@@ -1,6 +1,7 @@
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from transformers import set_seed
 import argparse
+import time
 
 def inference(input, model, tokenizer):
     encoded_input = tokenizer.encode(input, return_tensors="pt", truncation=True, max_length=1000)
@@ -23,13 +24,20 @@ if __name__ == "__main__":
     input = args.question
 
     model_name = args.model_name
+
+    print("Question: ", input)
+    print("Before Finetuning: ")
+
+    start_time = time.time()
+
     model = AutoModelForCausalLM.from_pretrained(model_name)
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     #Do we need any pad and truncation for token?
 
-    print("Question: ", input)
-    print("Before Finetuning: ")
+    print(f"Time loading model: {time.time() - start_time} seconds")
+
     print("Response: ", inference(input, model, tokenizer))
+    print(f"Total time: {time.time() - start_time} seconds")
     
     # Load the model
     set_seed(42)
