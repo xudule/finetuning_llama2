@@ -2,6 +2,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 from transformers import set_seed
 import argparse
 import time
+import os, sys
 
 def inference(input, model, tokenizer):
     encoded_input = tokenizer.encode(input, return_tensors="pt", truncation=True, max_length=1000)
@@ -38,10 +39,16 @@ if __name__ == "__main__":
 
     print("Response: ", inference(input, model, tokenizer))
     print(f"Total time: {time.time() - start_time} seconds")
-    
+
+    model_dir = args.finetuned_model
+    if os.path.isdir(model_dir):
+        print("Directory exists")
+    else:
+        print("Finetuned model in current directory does not exist")
+        sys.exit(1)
+
     # Load the model
     set_seed(42)
-    model_dir = args.finetuned_model
     model = AutoModelForCausalLM.from_pretrained(model_dir, local_files_only=True)
     tokenizer = AutoTokenizer.from_pretrained(model_dir, local_files_only=True)
 
@@ -49,3 +56,4 @@ if __name__ == "__main__":
     print("After Finetuning: ")
     print("Reponse:")
     print(inference(input, model, tokenizer))
+    sys.exit(0)
