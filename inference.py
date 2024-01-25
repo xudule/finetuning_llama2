@@ -8,52 +8,81 @@ def inference(input, model, tokenizer):
     encoded_input = tokenizer.encode(input, return_tensors="pt", truncation=True, max_length=1000)
 
     # Increase the max length if longer response is needed, but the generation time will be longer.
-    output_raw = model.generate(input_ids=encoded_input, max_length=100)
+    output_raw = model.generate(input_ids=encoded_input.to(model.device), max_length=100)
     output_decoded = tokenizer.batch_decode(output_raw, skip_special_tokens=True)
 
     return output_decoded[0][len(input):]
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument("--model_name", help="original model name", type=str, default="meta-llama/Llama-2-7b-chat-hf", nargs='?')
     parser.add_argument("--finetuned_model", help="finetuned model name", type=str, default="stable_model", nargs='?')
     parser.add_argument("--question", help="Provide your question to the model", type=str, default="Which location in Vietnam do you like the most?", nargs='?')
-    args = parser.parse_args()
+    parser.add_argument("--low_memory_mode",
+        help="Some GPU has limited memory. Apply quantization to avoid out of memory issue. Only applied when --device = gpu",
+        type=int, default=1, nargs='?')
+    parser.add_argument("--device", help="Running on device: cpu, gpu", type=str, default="gpu", nargs='?')
+    args, unknown = parser.parse_known_args()
 
     set_seed(42)
-    input = args.question
 
+    input = args.question
     model_name = args.model_name
+    device = "cuda"
+    quant = False
+    if args.device != "gpu":
+        device = "cpu"
+    elif args.low_memory_mode:
+        quant = True
 
     print("Question: ", input)
     print("Before Finetuning: ")
+    input = "### Question:\n" + input + "\n### Answer:"
 
     start_time = time.time()
-
     model = AutoModelForCausalLM.from_pretrained(model_name)
+    print(f"Time Loading model: {time.time() - start_time} seconds")
+
+    if quant:
+        set_seed(42)
+        start_time = time.time()
+        model = model.half()
+        print(f"Time Quantizing model: {time.time() - start_time} seconds")
+
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     #Do we need any pad and truncation for token?
 
-    print(f"Time loading model: {time.time() - start_time} seconds")
+    start_time = time.time()
+    model.to(device)
+    print(f"Time load to {device}: {time.time() - start_time} seconds")
 
+    start_time = time.time()
     print("Response: ", inference(input, model, tokenizer))
-    print(f"Total time: {time.time() - start_time} seconds")
+    print(f"Inference time: {time.time() - start_time} seconds")
 
     model_dir = args.finetuned_model
-    if os.path.isdir(model_dir):
-        print("Directory exists")
-    else:
+    if not os.path.isdir(model_dir):
         print("Finetuned model in current directory does not exist")
         sys.exit(1)
 
-    # Load the model
-    set_seed(42)
-    model = AutoModelForCausalLM.from_pretrained(model_dir, local_files_only=True)
-    tokenizer = AutoTokenizer.from_pretrained(model_dir, local_files_only=True)
-
     print("*"*50)
     print("After Finetuning: ")
+
+    set_seed(42)
+    start_time = time.time()
+    model = AutoModelForCausalLM.from_pretrained(model_dir, local_files_only=True)
+    if quant:
+        model = model.half()
+    print(f"Time Loading model: {time.time() - start_time} seconds")
+    tokenizer = AutoTokenizer.from_pretrained(model_dir, local_files_only=True)
+
+    start_time = time.time()
+    model.to(device)
+    print(f"Time load to {device}: {time.time() - start_time} seconds")
+
     print("Reponse:")
+    start_time = time.time()
     print(inference(input, model, tokenizer))
+    print(f"Time inference: {time.time() - start_time} seconds")
     sys.exit(0)
