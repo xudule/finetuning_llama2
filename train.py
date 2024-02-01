@@ -1,14 +1,35 @@
-from transformers import TrainingArguments, AutoModelForCausalLM, Trainer, AutoTokenizer
+from transformers import TrainingArguments, AutoModelForCausalLM, Trainer, AutoTokenizer, BitsAndBytesConfig
 from transformers import set_seed
 from peft import LoraConfig
+# import torch
 
 from inference import *
 from dataset import *
 
 set_seed(42)
 
-model_name = "meta-llama/Llama-2-7b-chat-hf"
-model = AutoModelForCausalLM.from_pretrained(model_name)
+parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+parser.add_argument("--model_name",
+        help="original model name", type=str,
+        default="meta-llama/Llama-2-7b-chat-hf", nargs='?')
+parser.add_argument("--low_memory_mode",
+        help="Some GPU has limited memory. Apply quantization to avoid out of memory issue.",
+        type=int, default=1, nargs='?')
+
+args, unknown = parser.parse_known_args()
+
+model_name = args.model_name
+
+start_time = time.time()
+if args.low_memory_mode:
+    model = AutoModelForCausalLM.from_pretrained(model_name,
+            quantization_config=BitsAndBytesConfig(load_in_8bit=True),
+            # torch_dtype=torch.bfloat16
+            )
+else:
+    model = AutoModelForCausalLM.from_pretrained(model_name)
+print(f"Loading model time: {time.time() - start_time} seconds")
+
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 tokenizer.pad_token = tokenizer.eos_token
 
@@ -19,13 +40,12 @@ def print_tokenizer_info(t):
 print_tokenizer_info(tokenizer)
 
 qa_split = read_and_tockenize_dataset(tokenizer)
-
-input = "Where are you from?"
-print("="*20, inference(input, model, tokenizer), "="*20)
+qa_split = split_train_test(qa_split)
 
 model_dir = "test_trainer"
 training_args = TrainingArguments(output_dir=model_dir,
                                   num_train_epochs=100,
+                                #   fp16=True,
                                   evaluation_strategy="epoch")
 
 peft_config = LoraConfig(
@@ -46,12 +66,10 @@ trainer = Trainer(
     tokenizer=tokenizer,
     # compute_metrics=compute_metrics,
 )
+
+start_time = time.time()
 trainer.train()
+print(f"Training time: {(time.time() - start_time)/60} minutes")
 
-#save the model then reload it
-set_seed(42)
+#save the model
 trainer.save_model(model_dir)
-model = AutoModelForCausalLM.from_pretrained(model_dir, local_files_only=True)
-
-print("*"*50)
-print(inference(input, model, tokenizer))

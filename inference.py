@@ -4,6 +4,8 @@ import argparse
 import time
 import os, sys
 
+from dataset import *
+
 def inference(input, model, tokenizer):
     encoded_input = tokenizer.encode(input, return_tensors="pt", truncation=True, max_length=1000)
 
@@ -38,7 +40,7 @@ if __name__ == "__main__":
 
     print("Question: ", input)
     print("Before Finetuning: ")
-    input = "### Question:\n" + input + "\n### Answer:"
+    input = generate_prompt(input)
 
     start_time = time.time()
     model = AutoModelForCausalLM.from_pretrained(model_name)
