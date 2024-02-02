@@ -38,6 +38,17 @@ if __name__ == "__main__":
     elif args.low_memory_mode:
         quant = True
 
+    def print_separation_line():
+        return print('-'*50)
+
+    print_separation_line()
+    print("Configurations:")
+    print(f"Original model: {model_name}")
+    print(f"Finetuned model: {args.finetuned_model}")
+    print(f"device: {device}")
+    print(f"Quantization: {'yes' if quant else 'no'}")
+    print_separation_line()
+
     print("Question: ", input)
     print("Before Finetuning: ")
     input = generate_prompt(input)
@@ -68,7 +79,7 @@ if __name__ == "__main__":
         print("Finetuned model in current directory does not exist")
         sys.exit(1)
 
-    print("*"*50)
+    print_separation_line()
     print("After Finetuning: ")
 
     set_seed(42)
