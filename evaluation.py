@@ -4,7 +4,7 @@ import pandas as pd
 
 set_seed(42)
 
-qa_dataset = read_dataset()
+qa_dataset = read_and_prepocess_dataset()
 
 model_dir = "test_trainer"
 model = AutoModelForCausalLM.from_pretrained(model_dir, local_files_only=True).half()
