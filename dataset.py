@@ -1,8 +1,8 @@
 from datasets import Dataset
 import json
 
-def read_dataset():
-    with open('data.json', 'r') as f:
+def read_dataset(file_name='data.json'):
+    with open(file_name, 'r') as f:
         ds = json.load(f)
     return ds
 
