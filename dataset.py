@@ -14,6 +14,9 @@ def read_and_prepocess_dataset():
     ds = [{'question': generate_prompt(item['question']), 'answer': item['answer']} for item in ds]
     return ds
 
+def find_max_length_of_output(qa_dataset_with_prompt):
+    return max([len(item['question']) + len(item['answer']) for item in qa_dataset_with_prompt])
+
 def read_and_tockenize_dataset(tokenizer):
     qa_pairs = read_and_prepocess_dataset()
     # Combine the questions and answers into sequences
@@ -37,3 +40,4 @@ if __name__ == "__main__":
     print(ds[0])
     ds = read_and_prepocess_dataset()
     print(ds[0])
+    print("Max length of output for model should be: ", find_max_length_of_output(ds))

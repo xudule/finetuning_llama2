@@ -6,11 +6,11 @@ import os, sys
 
 from dataset import *
 
-def inference(input, model, tokenizer):
+def inference(input, model, tokenizer, max_output_length=500):
     encoded_input = tokenizer.encode(input, return_tensors="pt", truncation=True, max_length=1000)
 
     # Increase the max length if longer response is needed, but the generation time will be longer.
-    output_raw = model.generate(input_ids=encoded_input.to(model.device), max_length=100)
+    output_raw = model.generate(input_ids=encoded_input.to(model.device), max_length=max_output_length)
     output_decoded = tokenizer.batch_decode(output_raw, skip_special_tokens=True)
 
     return output_decoded[0][len(input):]
