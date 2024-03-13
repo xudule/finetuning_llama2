@@ -1,6 +1,7 @@
 from transformers import TrainingArguments, AutoModelForCausalLM, Trainer, AutoTokenizer, BitsAndBytesConfig, EarlyStoppingCallback
 from transformers import set_seed
 from peft import LoraConfig, get_peft_model
+import json
 # import torch
 
 from inference import *
@@ -15,6 +16,9 @@ parser.add_argument("--model_name",
 parser.add_argument("--low_memory_mode",
         help="Some GPU has limited memory. Apply quantization to avoid out of memory issue.",
         type=int, default=1, nargs='?')
+parser.add_argument("--training_config",
+        help="Arguments for TrainingArguments",
+        type=str, default='config/low_memory_mode.json', nargs='?')
 parser.add_argument("--early_stopping",
         help="Use early stopping. Deactivate by default.",
         type=int, default=0, nargs='?')
@@ -45,18 +49,11 @@ print_tokenizer_info(tokenizer)
 qa_split = read_and_tockenize_dataset(tokenizer)
 qa_split = split_train_test(qa_split)
 
-model_dir = "test_trainer"
-training_args = TrainingArguments(output_dir=model_dir,
-                                  num_train_epochs=300,
-                                  logging_steps=20,
-                                  #fp16=True,
-                                  evaluation_strategy = "steps",
-                                  save_strategy = "steps",
-                                  save_steps=40,
-                                  save_total_limit=4,
-                                  eval_steps=20,
-                                  load_best_model_at_end = True if args.early_stopping else False,
-                                  )
+with open(args.training_config, 'r') as f:
+    training_args_dict = json.load(f)
+
+training_args = TrainingArguments(**training_args_dict,
+                        load_best_model_at_end = True if args.early_stopping else False)
 
 peft_config = LoraConfig(
     lora_alpha=16,
@@ -83,4 +80,5 @@ trainer.train()
 print(f"Training time: {(time.time() - start_time)/60} minutes")
 
 #save the model
+model_dir = training_args_dict["output_dir"]
 trainer.save_model(model_dir)

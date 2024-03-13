@@ -1,0 +1,10 @@
+{
+    "output_dir": "test_trainer",
+    "num_train_epochs": 300,
+    "logging_steps": 20,
+    "evaluation_strategy": "steps",
+    "save_strategy": "steps",
+    "save_steps": 40,
+    "save_total_limit": 4,
+    "eval_steps": 20
+}
