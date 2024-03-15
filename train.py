@@ -1,11 +1,11 @@
 from transformers import TrainingArguments, AutoModelForCausalLM, Trainer, AutoTokenizer, BitsAndBytesConfig, EarlyStoppingCallback
 from transformers import set_seed
 from peft import LoraConfig, get_peft_model
-import json
 # import torch
 
 from inference import *
 from dataset import *
+from config import *
 
 set_seed(42)
 
@@ -49,19 +49,14 @@ print_tokenizer_info(tokenizer)
 qa_split = read_and_tockenize_dataset(tokenizer)
 qa_split = split_train_test(qa_split)
 
-with open(args.training_config, 'r') as f:
-    training_args_dict = json.load(f)
+finetunning_config = FinetuningConfig(args.training_config)
+training_args_dict = finetunning_config.training_args
 
 training_args = TrainingArguments(**training_args_dict,
                         load_best_model_at_end = True if args.early_stopping else False)
 
-peft_config = LoraConfig(
-    lora_alpha=16,
-    lora_dropout=0.1,
-    r=64,
-    bias="none",
-    task_type="CAUSAL_LM",
-)
+lora_config = finetunning_config.lora_config
+peft_config = LoraConfig(**lora_config)
 
 model = get_peft_model(model, peft_config)
 
