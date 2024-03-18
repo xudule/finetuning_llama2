@@ -1,13 +1,16 @@
 from flask import Flask, request, jsonify
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from transformers import set_seed
+
+import sys
+sys.path.append('../../')
 from inference import *
 
 set_seed(42)
 
 app = Flask(__name__)
 
-model_name = "test_trainer"
+model_name = "../../test_trainer"
 model = AutoModelForCausalLM.from_pretrained(model_name, local_files_only=True).half()
 tokenizer = AutoTokenizer.from_pretrained(model_name, local_files_only=True)
 model = model.to("cuda")
@@ -19,6 +22,7 @@ def chat():
     q_prompt = generate_prompt(question)
 
     answer = inference(q_prompt, model, tokenizer, max_output_length=1000)
+    print(f"Question: {question}, Answer: {answer}")
     return jsonify({'answer': answer})
 
 if __name__ == '__main__':
