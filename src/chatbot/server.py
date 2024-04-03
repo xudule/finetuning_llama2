@@ -10,7 +10,7 @@ set_seed(42)
 
 app = Flask(__name__)
 
-model_name = "../../test_trainer"
+model_name = "../../stable_model"
 model = AutoModelForCausalLM.from_pretrained(model_name, local_files_only=True).half()
 tokenizer = AutoTokenizer.from_pretrained(model_name, local_files_only=True)
 model = model.to("cuda")
