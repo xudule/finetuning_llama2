@@ -1,7 +1,13 @@
 from datasets import Dataset
 import json
+import os
 
-def read_dataset(file_name='data.json'):
+def read_dataset(file_name='../data.json'):
+    if not os.path.exists(file_name):
+        file_name = '../data_template.json'
+        print("You don't have a database")
+
+    print("Using database: ", file_name)
     with open(file_name, 'r') as f:
         ds = json.load(f)
     return ds
