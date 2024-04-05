@@ -1,7 +1,8 @@
 from transformers import TrainingArguments, AutoModelForCausalLM, Trainer, AutoTokenizer, BitsAndBytesConfig, EarlyStoppingCallback
 from transformers import set_seed
 from peft import LoraConfig, get_peft_model
-# import torch
+import pandas as pd
+import matplotlib.pyplot as plt
 
 from inference import *
 from dataset import *
@@ -46,8 +47,10 @@ def print_tokenizer_info(t):
 
 print_tokenizer_info(tokenizer)
 
-qa_split = read_and_tockenize_dataset(tokenizer)
-qa_split = split_train_test(qa_split)
+qa_full = read_and_tockenize_dataset(tokenizer)
+qa_split = split_train_test(qa_full)
+train_dataset = qa_split['train']
+test_dataset = qa_split['test']
 
 finetunning_config = FinetuningConfig(args.training_config)
 training_args_dict = finetunning_config.training_args
@@ -63,10 +66,10 @@ model = get_peft_model(model, peft_config)
 trainer = Trainer(
     model=model,
     args=training_args,
-    train_dataset=qa_split['train'],
-    eval_dataset=qa_split['test'],
+    train_dataset=train_dataset,
+    eval_dataset=test_dataset,
     tokenizer=tokenizer,
-    callbacks=[EarlyStoppingCallback(early_stopping_patience=20)] if args.early_stopping else None,
+    callbacks=[EarlyStoppingCallback(early_stopping_patience=5)] if args.early_stopping else None,
     # compute_metrics=compute_metrics,
 )
 
@@ -77,3 +80,8 @@ print(f"Training time: {(time.time() - start_time)/60} minutes")
 #save the model
 model_dir = training_args_dict["output_dir"]
 trainer.save_model(model_dir)
+
+df = pd.DataFrame(trainer.state.log_history)
+print(df)
+plt.scatter(x=df.index.values.tolist(), y=df['eval_loss'])
+plt.savefig(model_dir + "/loss_plot.png")

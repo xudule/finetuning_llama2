@@ -21,7 +21,7 @@ def chat():
     question = data['question']
     q_prompt = generate_prompt(question)
 
-    answer = inference(q_prompt, model, tokenizer, max_output_length=1000)
+    answer = inference(q_prompt, model, tokenizer, max_output_length=2000)
     print(f"Question: {question}, Answer: {answer}")
     return jsonify({'answer': answer})
 
