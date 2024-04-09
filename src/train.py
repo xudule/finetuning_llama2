@@ -82,6 +82,6 @@ model_dir = training_args_dict["output_dir"]
 trainer.save_model(model_dir)
 
 df = pd.DataFrame(trainer.state.log_history)
-print(df)
 plt.scatter(x=df.index.values.tolist(), y=df['eval_loss'])
 plt.savefig(model_dir + "/loss_plot.png")
+df.to_csv(model_dir + "/loss.csv")

@@ -1,16 +1,22 @@
 from flask import Flask, request, jsonify
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from transformers import set_seed
+import argparse
 
 import sys
-sys.path.append('../../')
+sys.path.append('../')
 from inference import *
 
 set_seed(42)
 
+parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+parser.add_argument("--model_name", help="model path", type=str, default="../low_memory_mode", nargs='?')
+args, unknown = parser.parse_known_args()
+
 app = Flask(__name__)
 
-model_name = "../../stable_model"
+model_name = args.model_name
+print("Using model: ", model_name)
 model = AutoModelForCausalLM.from_pretrained(model_name, local_files_only=True).half()
 tokenizer = AutoTokenizer.from_pretrained(model_name, local_files_only=True)
 model = model.to("cuda")

@@ -4,7 +4,7 @@ This repository helps you finetune Llama2 with your dataset.
 
 You will need to download Llama2, for example, see instructions from HuggingFace: https://huggingface.co/meta-llama
 
-Adapt data.json with your database.
+Create your database with json format and it *data.json*. A database example can be see in *data_template.json*
 
 Go to *src* folder:
 - Run *train.py* to finetune Llama2 with your dataset.
