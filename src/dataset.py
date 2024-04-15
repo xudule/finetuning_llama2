@@ -2,21 +2,27 @@ from datasets import Dataset
 import json
 import os
 
-def read_dataset(file_name='../data.json'):
+def read_json(file_name, default_file_path):
     if not os.path.exists(file_name):
-        file_name = '../data_template.json'
-        print("You don't have a database")
+        file_name = default_file_path
 
-    print("Using database: ", file_name)
+    print("Using json file: ", file_name)
     with open(file_name, 'r') as f:
         ds = json.load(f)
     return ds
+
+def read_dataset():
+    return read_json(file_name='../data.json', default_file_path='../data_template.json')
+
+def read_moderation_dataset():
+    return read_json(file_name='../data_moderation.json', default_file_path='../data_moderation_template.json')
 
 def generate_prompt(question):
     return "### Question:\n" + question + "\n### Answer:"
 
 def read_and_prepocess_dataset():
     ds = read_dataset()
+    ds = ds + read_moderation_dataset()
     ds = [{'question': generate_prompt(item['question']), 'answer': item['answer']} for item in ds]
     return ds
 
@@ -46,4 +52,5 @@ if __name__ == "__main__":
     print(ds[0])
     ds = read_and_prepocess_dataset()
     print(ds[0])
+    print(ds[-1])
     print("Max length of output for model should be: ", find_max_length_of_output(ds))
