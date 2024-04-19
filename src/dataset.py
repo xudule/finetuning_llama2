@@ -2,6 +2,12 @@ from datasets import Dataset
 import json
 import os
 
+prompt_template = f"""<s>[INST] <<SYS>>
+{{system_prompt}}
+<</SYS>>
+
+{{user_message}} [/INST]"""
+
 def read_json(file_name, default_file_path):
     if not os.path.exists(file_name):
         file_name = default_file_path
@@ -18,7 +24,15 @@ def read_moderation_dataset():
     return read_json(file_name='../data_moderation.json', default_file_path='../data_moderation_template.json')
 
 def generate_prompt(question):
-    return "### Question:\n" + question + "\n### Answer:"
+    file_name = 'prompt_template.json'
+    if not os.path.exists(file_name):
+        return "### Question:\n" + question + "\n### Answer:"
+
+    with open(file_name, 'r') as f:
+        p = json.load(f)
+    p = prompt_template.format(system_prompt=p["system_prompt"], user_message=question)
+    return p
+
 
 def read_and_prepocess_dataset():
     ds = read_dataset()

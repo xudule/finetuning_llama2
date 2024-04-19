@@ -3,3 +3,5 @@ __pycache__/
 stable_model/
 test_trainer/
 data.json
+data_moderation.json
+src/prompt_template.json
