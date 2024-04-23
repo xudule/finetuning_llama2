@@ -24,11 +24,13 @@ def read_moderation_dataset():
     return read_json(file_name='../data_moderation.json', default_file_path='../data_moderation_template.json')
 
 def generate_prompt(question):
+    dir = os.path.dirname(__file__)
     file_name = 'prompt_template.json'
-    if not os.path.exists(file_name):
+    file_path = os.path.join(dir, file_name)
+    if not os.path.exists(file_path):
         return "### Question:\n" + question + "\n### Answer:"
 
-    with open(file_name, 'r') as f:
+    with open(file_path, 'r') as f:
         p = json.load(f)
     p = prompt_template.format(system_prompt=p["system_prompt"], user_message=question)
     return p
