@@ -1,5 +1,5 @@
 from transformers import AutoModelForCausalLM, AutoTokenizer
-from transformers import set_seed
+from transformers import set_seed, pipeline
 import argparse
 import time
 import os, sys
@@ -7,13 +7,13 @@ import os, sys
 from dataset import *
 
 def inference(input, model, tokenizer, max_output_length=500):
-    encoded_input = tokenizer.encode(input, return_tensors="pt", truncation=True, max_length=1000)
-
-    # Increase the max length if longer response is needed, but the generation time will be longer.
-    output_raw = model.generate(input_ids=encoded_input.to(model.device), max_length=max_output_length)
-    output_decoded = tokenizer.batch_decode(output_raw, skip_special_tokens=True)
-
-    return output_decoded[0][len(input):]
+    mypipeline = pipeline("text-generation", model=model, tokenizer=tokenizer, device=0)
+    sequences = mypipeline(
+    input,
+    eos_token_id=tokenizer.eos_token_id,
+    max_length=max_output_length,
+    )
+    return sequences[0]['generated_text'][len(input):]
 
 
 if __name__ == "__main__":
